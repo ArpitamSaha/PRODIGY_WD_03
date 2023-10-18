@@ -1,10 +1,10 @@
 import './App.css';
-import GameBoard from './Components/GameBoard/GameBoard';
+import Game from './Components/Game/Game';
 
 function App() {
   return (
     <div className='App'>
-      <GameBoard/>
+      <Game/>      
     </div>
   );
 }

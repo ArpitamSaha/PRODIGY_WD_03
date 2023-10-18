@@ -1,0 +1,46 @@
+.container{
+    text-align: center;
+}
+.title{
+    margin:2rem 0;
+
+    color: #fff;
+    font-size: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.title img{
+    padding: 1rem 1rem;
+    height: 5.5rem;
+}
+.reset{
+    width: 9rem;
+    height: 3rem;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    border-radius: 1rem;
+    background: #1f3540;
+    font-size: 1.3rem;
+    color: #26ffcb;
+    margin-top: 2rem;
+}
+.boxes{
+    display: flex;
+    height: 10rem;
+    width: 10rem;
+    background: #1f3540;
+    border: .25rem solid #0f1b21;
+    border-radius: 1rem;
+    cursor: pointer;
+}
+.boxes img{
+    margin: 2rem 2rem;
+}
+.board{
+    height:32rem;
+    width: 30rem;
+    display: flex;
+    margin: auto;
+}
