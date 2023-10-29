@@ -1,112 +1,181 @@
-import React, { useRef, useState } from 'react'
-import "./Game.css"
+import React, { useState } from "react";
+import { Modal, Button } from "react-bootstrap";
+import Board from "../Board/Board";
+import Minimax from "../Minimax";
 
-import circle from '../Assets/circle.png'
-import cross from '../Assets/cross.png'
-
-let data = ["","","","","","","","",""];
-
-const Game = () => {
+const Game = (props) => {
+    const handleClick = (event) => {
+        const targetCell = event.target;
+        const targetCellID = targetCell.getAttribute("id");
+        const indexesOfTargetCell = coordination[targetCellID];
     
-    let [count , setCount] = useState(0);
-    let [lock , setLock] = useState(false);
-    let titleref = useRef(null);
-    let box0 = useRef(null);
-    let box1 = useRef(null);
-    let box2 = useRef(null);
-    let box3 = useRef(null);
-    let box4 = useRef(null);
-    let box5 = useRef(null);
-    let box6 = useRef(null);
-    let box7 = useRef(null);
-    let box8 = useRef(null);
-
-    let boxArray = [box0,box1,box2,box3,box4,box5,box6,box7,box8]
-
-    const toggle = (e,num) => {
-        if(lock)
-        return 0;
-    if(count%2 === 0){
-        e.target.innerHTML = `<img src = '${cross}'>`;
-        data[num] = "x";
-        setCount(++count);
+        if (targetCell.innerText !== EMPTY) {
+          setShowWarningModal(!showWarningModal);
+        } else {
+          if (settings.gameMode === "PvC") {
+            targetCell.innerText = players.user;
+            updateBoardState(...indexesOfTargetCell, players.user);
+    
+            if (!minimax.getDepth()) {
+              setShowResultModal(!showResultModal);
+            } else {
+              const bestValuesForComputer = minimax.max();
+              updateBoardState(
+                bestValuesForComputer.row,
+                bestValuesForComputer.col,
+                players.opponnent
+              );
+    
+              if (minimax.isFinished()) {
+                setShowResultModal(!showResultModal);
+              }
+            }
+          } else {
+            let countOfX = 0;
+            let countOfO = 0;
+            let turn;
+    
+            for (let i = 0; i < 3; i++) {
+              for (let j = 0; j < 3; j++) {
+                if (board[i][j] === "X") countOfX += 1;
+                else if (board[i][j] === "O") countOfO += 1;
+              }
+            }
+    
+            if (!countOfX && !countOfO) {
+              turn = "X";
+            } else if (countOfX && !countOfO) {
+              turn = "O";
+            } else if (countOfX === countOfO) {
+              turn = "X";
+            } else if (countOfX > countOfO) {
+              turn = "O";
+            } else if (countOfO > countOfX) {
+              turn = "X";
+            }
+    
+            updateBoardState(...indexesOfTargetCell, turn);
+            if (minimax.isFinished()) {
+              setShowResultModal(!showResultModal);
+            }
+          }
         }
-        else{
-            e.target.innerHTML = `<img src = '${circle}'>`;
-            data[num] = "o";
-            setCount(++count);
+      };
+    
+      const updateBoardState = (row, col, player) => {
+        let currentBoard = board;
+        currentBoard[row][col] = player;
+        setBoard(currentBoard);
+        forceUpdate();
+      };
+    
+      const playAgain = () => {
+        setShowResultModal(!showResultModal);
+        setBoard(initialBoard);
+      };
+    
+      const closeWarningModal = () => {
+        setShowWarningModal(!showWarningModal);
+      };
+    
+      const EMPTY = "";
+      const initialBoard = [
+        [EMPTY, EMPTY, EMPTY],
+        [EMPTY, EMPTY, EMPTY],
+        [EMPTY, EMPTY, EMPTY],
+      ];
+    
+      const [board, setBoard] = useState(initialBoard);
+      const [showResultModal, setShowResultModal] = useState(false);
+      const [showWarningModal, setShowWarningModal] = useState(false);
+      const forceUpdate = React.useReducer(() => ({}))[1];
+    
+      const settings = props.settings;
+      const players = {
+        user: settings.user,
+        opponnent: settings.user === "X" ? "O" : "X",
+      };
+      const minimax = new Minimax(board, players);
+      let modalDatas = {
+        title: undefined,
+        bodyText: undefined,
+      };
+      const coordination = {
+        "cell-1": [0, 0],
+        "cell-2": [0, 1],
+        "cell-3": [0, 2],
+        "cell-4": [1, 0],
+        "cell-5": [1, 1],
+        "cell-6": [1, 2],
+        "cell-7": [2, 0],
+        "cell-8": [2, 1],
+        "cell-9": [2, 2],
+      };
+    
+      if (showResultModal) {
+        let finalPoint = minimax.returnValueOfPosition();
+        if (finalPoint === 0) {
+          modalDatas.title = "Draw";
+          modalDatas.bodyText = "The match ended in a draw!";
         }
-        checkWin();
-    }
-
-    const checkWin = () => {
-        if(data[0] === data[1] && data[1] === data[2] && data[2] !== ""){
-            won(data[2]);
+        if (finalPoint === 1) {
+          modalDatas.title = "Game Over";
+          modalDatas.bodyText = "O won!";
         }
-        else if(data[3] === data[4] && data[4] === data[5] && data[5] !== ""){
-            won(data[5]);
+        if (finalPoint === -1) {
+          modalDatas.title = "Game Over";
+          modalDatas.bodyText = "X won!";
         }
-        else if(data[6] === data[7] && data[7] === data[8] && data[8] !== ""){
-            won(data[8]);
-        }
-        else if(data[0] === data[3] && data[3] === data[6] && data[6] !== ""){
-            won(data[6]);
-        }
-        else if(data[1] === data[4] && data[4] === data[7] && data[7] !== ""){
-            won(data[7]);
-        }
-        else if(data[2] === data[5] && data[5] === data[8] && data[8] !== ""){
-            won(data[8]);
-        }
-        else if(data[0] === data[4] && data[4] === data[8] && data[8] !== ""){
-            won(data[8]);
-        }
-        else if(data[2] === data[4] && data[4] === data[6] && data[6] !== ""){
-            won(data[6]);
-        }
-    }
-    const won = (winner) => {
-        setLock(true);
-        if(winner === "x")
-        titleref.current.innerHTML = `Congratulation: <img src=${cross}>`;
-    else
-    titleref.current.innerHTML = `Congratulation: <img src=${cross}>`;
-}
-
-const reset = () => {
-    setLock(false);
-    let data = ["","","","","","","","",""];
-    titleref.current.innerHTML = `Tic Tac Toe`;
-    boxArray.map((e)=>{
-        e.current.innerHTML = "";
-    })
-}
-
-  return (
-    <div>
-       <div className="container">
-            <h1 className="title" ref={titleref}>Tic Tac Toe</h1>
-            <div className="board">
-                <div className="row1">
-                    <div className="boxes" ref={box0} onClick={(e)=>{toggle(e,0)}}></div>
-                    <div className="boxes" ref={box1} onClick={(e)=>{toggle(e,1)}}></div>
-                    <div className="boxes" ref={box2} onClick={(e)=>{toggle(e,2)}}></div>
-                </div>
-                <div className="row2">
-                    <div className="boxes" ref={box3} onClick={(e)=>{toggle(e,3)}}></div>
-                    <div className="boxes" ref={box4} onClick={(e)=>{toggle(e,4)}}></div>
-                    <div className="boxes" ref={box5} onClick={(e)=>{toggle(e,5)}}></div>
-                </div>
-                <div className="row3">
-                    <div className="boxes" ref={box6} onClick={(e)=>{toggle(e,6)}}></div>
-                    <div className="boxes" ref={box7} onClick={(e)=>{toggle(e,7)}}></div>
-                    <div className="boxes" ref={box8} onClick={(e)=>{toggle(e,8)}}></div>
-                </div>
-            </div>
-            <button className="reset" onClick={()=>{reset()}}>Reset</button>
-        </div> 
-    </div>
-  )
+      }
+    
+      if (
+        settings.gameMode === "PvC" &&
+        players.user === "O" &&
+        board.toString() === initialBoard.toString() // "Objects" don't equal each other even though they're the same, so we should turn the objects into string forms for a true comparison.
+      ) {
+        const bestValuesForComputer = minimax.max();
+        updateBoardState(
+          bestValuesForComputer.row,
+          bestValuesForComputer.col,
+          players.opponnent
+        );
+      }
+    
+      return (
+        <>
+          <Modal show={showResultModal}>
+            <Modal.Header>
+              <Modal.Title>{modalDatas.title}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>{modalDatas.bodyText}</p>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => window.location.reload()}>
+                Go back to Settings
+              </Button>
+              <Button onClick={playAgain}>Play Again</Button>
+            </Modal.Footer>
+          </Modal>
+    
+          <Modal show={showWarningModal}>
+            <Modal.Header>
+              <Modal.Title>You cannot move to a filled cell.</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>You just tried to move to a filled cell.</p>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={closeWarningModal}>
+                Close
+              </Button>
+              <Button onClick={closeWarningModal}>OK</Button>
+            </Modal.Footer>
+          </Modal>
+    
+          <Board board={board} onClickedToCells={handleClick} />
+        </>
+      );
 }
 
 export default Game
